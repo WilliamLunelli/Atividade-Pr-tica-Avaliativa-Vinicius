@@ -1,0 +1,13 @@
+Array original: 64 25 12 22 11 
+
+InsertionSort:  11 12 22 25 64 
+Tempo: 0.0010 ms  Comparacoes: 9  Trocas: 9
+
+QuickSort:      11 12 22 25 64 
+Tempo: 0.0010 ms  Comparacoes: 9  Trocas: 7
+
+MergeSort:      11 12 22 25 64 
+Tempo: 0.0040 ms  Comparacoes: 6  Trocas: 6
+
+
+=== Code Execution Successful ===
