@@ -1,110 +1,203 @@
-#include <stdio.h>   // pra usar printf
-#include <stdlib.h>  // pra usar malloc e free
-#include <time.h>    // pra medir tempo de execução
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
-// função que preenche o vetor em ordem decrescente
-// exemplo: tamanho = 5 → 5 4 3 2 1
-void preencherDecrescente(int vetor[], int tamanho) {
-    for (int i = 0; i < tamanho; i++) {
-        vetor[i] = tamanho - i;  // coloca os números do maior pro menor
+int comparacoes;
+int trocas;
+
+void printArray(int arr[], int n)
+{
+    int i;
+    for(i = 0; i < n; i++)
+    {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
+
+/* ---- INSERTION SORT ---- */
+
+void insertionSort(int arr[], int n)
+{
+    int i, j, chave;
+
+    for(i = 1; i < n; i++)
+    {
+        chave = arr[i];
+        j = i - 1;
+
+        while(j >= 0 && arr[j] > chave)
+        {
+            arr[j + 1] = arr[j];
+            j = j - 1;
+            comparacoes++;
+            trocas++;
+        }
+
+        arr[j + 1] = chave;
     }
 }
 
-// Bubble Sort normal
-// também conta quantas comparações e trocas foram feitas
-void bubbleSort(int vetor[], int tamanho, long long *comparacoes, long long *movimentacoes) {
+/* ---- QUICK SORT ---- */
 
-    for (int i = 0; i < tamanho - 1; i++) {  // controla as passadas
-        for (int j = 0; j < tamanho - i - 1; j++) {  // percorre o vetor
+void swap(int *a, int *b)
+{
+    int temp;
+    temp = *a;
+    *a = *b;
+    *b = temp;
+    trocas++;
+}
 
-            (*comparacoes)++;  // conta cada comparação feita
+int partition(int arr[], int baixo, int alto)
+{
+    int pivo, i, j;
 
-            if (vetor[j] > vetor[j + 1]) {  // se o atual for maior que o próximo
-                // troca os dois
-                int temp = vetor[j];
-                vetor[j] = vetor[j + 1];
-                vetor[j + 1] = temp;
+    pivo = arr[alto];
+    i = baixo - 1;
 
-                (*movimentacoes)++;  // conta a troca
-            }
+    for(j = baixo; j < alto; j++)
+    {
+        comparacoes++;
+        if(arr[j] <= pivo)
+        {
+            i++;
+            swap(&arr[i], &arr[j]);
         }
+    }
+
+    swap(&arr[i + 1], &arr[alto]);
+    return i + 1;
+}
+
+void quickSort(int arr[], int baixo, int alto)
+{
+    int pi;
+
+    if(baixo < alto)
+    {
+        pi = partition(arr, baixo, alto);
+        quickSort(arr, baixo, pi - 1);
+        quickSort(arr, pi + 1, alto);
     }
 }
 
-// Selection Sort
-// procura o menor número e coloca na posição certa
-void selectionSort(int vetor[], int tamanho, long long *comparacoes, long long *movimentacoes) {
+/* ---- MERGE SORT ---- */
 
-    for (int i = 0; i < tamanho - 1; i++) {
+void merge(int arr[], int esq, int meio, int dir)
+{
+    int i, j, k;
+    int tam1, tam2;
+    int *L, *R;
 
-        int menor = i;  // assume que o menor é o atual
+    tam1 = meio - esq + 1;
+    tam2 = dir - meio;
 
-        for (int j = i + 1; j < tamanho; j++) {
-            (*comparacoes)++;  // conta comparação
+    L = (int*) malloc(tam1 * sizeof(int));
+    R = (int*) malloc(tam2 * sizeof(int));
 
-            if (vetor[j] < vetor[menor]) {
-                menor = j;  // achou um menor
-            }
+    for(i = 0; i < tam1; i++)
+        L[i] = arr[esq + i];
+
+    for(j = 0; j < tam2; j++)
+        R[j] = arr[meio + 1 + j];
+
+    i = 0;
+    j = 0;
+    k = esq;
+
+    while(i < tam1 && j < tam2)
+    {
+        comparacoes++;
+        if(L[i] <= R[j])
+        {
+            arr[k] = L[i];
+            i++;
         }
-
-        // se achou um menor diferente, faz a troca
-        if (menor != i) {
-            int temp = vetor[i];
-            vetor[i] = vetor[menor];
-            vetor[menor] = temp;
-
-            (*movimentacoes)++;  // conta a troca
+        else
+        {
+            arr[k] = R[j];
+            j++;
         }
+        trocas++;
+        k++;
+    }
+
+    while(i < tam1)
+    {
+        arr[k] = L[i];
+        i++;
+        k++;
+    }
+
+    while(j < tam2)
+    {
+        arr[k] = R[j];
+        j++;
+        k++;
+    }
+
+    free(L);
+    free(R);
+}
+
+void mergeSort(int arr[], int esq, int dir)
+{
+    int meio;
+
+    if(esq < dir)
+    {
+        meio = (esq + dir) / 2;
+        mergeSort(arr, esq, meio);
+        mergeSort(arr, meio + 1, dir);
+        merge(arr, esq, meio, dir);
     }
 }
 
-// função pra testar os algoritmos
-void testarAlgoritmo(int tamanho) {
+/* ---- MAIN ---- */
 
-    int *vetor = malloc(tamanho * sizeof(int));  // cria vetor dinamicamente
-
+int main()
+{
+    int arr1[] = {64, 25, 12, 22, 11};
+    int arr2[] = {64, 25, 12, 22, 11};
+    int arr3[] = {64, 25, 12, 22, 11};
+    int n = 5;
     clock_t inicio, fim;
     double tempo;
-    long long comparacoes, movimentacoes;
 
-    // ===== Testando Bubble Sort =====
-    preencherDecrescente(vetor, tamanho);  // pior caso
+    printf("Array original: ");
+    printArray(arr1, n);
+    printf("\n");
+
     comparacoes = 0;
-    movimentacoes = 0;
-
+    trocas = 0;
     inicio = clock();
-    bubbleSort(vetor, tamanho, &comparacoes, &movimentacoes);
+    insertionSort(arr1, n);
     fim = clock();
+    tempo = (double)(fim - inicio) / CLOCKS_PER_SEC * 1000;
+    printf("InsertionSort:  ");
+    printArray(arr1, n);
+    printf("Tempo: %.4f ms  Comparacoes: %d  Trocas: %d\n\n", tempo, comparacoes, trocas);
 
-    tempo = (double)(fim - inicio) * 1000 / CLOCKS_PER_SEC;
-
-    printf("Bubble\t%d\t%.2f ms\t%lld\t%lld\n",
-           tamanho, tempo, comparacoes, movimentacoes);
-
-    // ===== Testando Selection Sort =====
-    preencherDecrescente(vetor, tamanho);  // reseta o vetor
     comparacoes = 0;
-    movimentacoes = 0;
-
+    trocas = 0;
     inicio = clock();
-    selectionSort(vetor, tamanho, &comparacoes, &movimentacoes);
+    quickSort(arr2, 0, n - 1);
     fim = clock();
+    tempo = (double)(fim - inicio) / CLOCKS_PER_SEC * 1000;
+    printf("QuickSort:      ");
+    printArray(arr2, n);
+    printf("Tempo: %.4f ms  Comparacoes: %d  Trocas: %d\n\n", tempo, comparacoes, trocas);
 
-    tempo = (double)(fim - inicio) * 1000 / CLOCKS_PER_SEC;
-
-    printf("Selection\t%d\t%.2f ms\t%lld\t%lld\n",
-           tamanho, tempo, comparacoes, movimentacoes);
-
-    free(vetor);  // libera memória
-}
-
-int main() {
-
-    printf("Algoritmo\tTam\tTempo\tComparacoes\tTrocas\n");
-
-    testarAlgoritmo(100);
-    testarAlgoritmo(1000);
-    testarAlgoritmo(10000);
+    comparacoes = 0;
+    trocas = 0;
+    inicio = clock();
+    mergeSort(arr3, 0, n - 1);
+    fim = clock();
+    tempo = (double)(fim - inicio) / CLOCKS_PER_SEC * 1000;
+    printf("MergeSort:      ");
+    printArray(arr3, n);
+    printf("Tempo: %.4f ms  Comparacoes: %d  Trocas: %d\n", tempo, comparacoes, trocas);
 
     return 0;
 }
