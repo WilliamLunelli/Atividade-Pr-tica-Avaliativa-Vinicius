@@ -1,203 +1,233 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <string.h>
 
-int comparacoes;
-int trocas;
+/* ============================================================
+   FUNÇÕES AUXILIARES
+   ============================================================ */
 
-void printArray(int arr[], int n)
-{
-    int i;
-    for(i = 0; i < n; i++)
-    {
+/* Imprime todos os elementos de um array */
+void printArray(int arr[], int size) {
+    for (int i = 0; i < size; i++)
         printf("%d ", arr[i]);
-    }
     printf("\n");
 }
 
-/* ---- INSERTION SORT ---- */
+/* Troca os valores de dois ponteiros */
+void swap(int *a, int *b) {
+    int temp = *a;
+    *a = *b;
+    *b = temp;
+}
 
-void insertionSort(int arr[], int n)
-{
-    int i, j, chave;
+/* Copia o array original para que cada algoritmo use os mesmos dados */
+void copyArray(int src[], int dest[], int n) {
+    for (int i = 0; i < n; i++)
+        dest[i] = src[i];
+}
 
-    for(i = 1; i < n; i++)
-    {
-        chave = arr[i];
-        j = i - 1;
+/* ============================================================
+   ALGORITMOS DE ORDENAÇÃO
+   ============================================================ */
 
-        while(j >= 0 && arr[j] > chave)
-        {
-            arr[j + 1] = arr[j];
-            j = j - 1;
-            comparacoes++;
-            trocas++;
-        }
+/*
+ * Bubble Sort — O(n²)
+ * Compara pares adjacentes e os troca até o array estar ordenado.
+ * Simples, porém ineficiente para arrays grandes.
+ */
+void bubbleSort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++)
+        for (int j = 0; j < n - i - 1; j++)
+            if (arr[j] > arr[j + 1])
+                swap(&arr[j], &arr[j + 1]);
+}
 
-        arr[j + 1] = chave;
+/*
+ * Selection Sort — O(n²)
+ * A cada iteração, encontra o menor elemento e o coloca na posição correta.
+ */
+void selectionSort(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        int min_idx = i;
+        for (int j = i + 1; j < n; j++)
+            if (arr[j] < arr[min_idx])
+                min_idx = j;
+        swap(&arr[min_idx], &arr[i]);
     }
 }
 
-/* ---- QUICK SORT ---- */
-
-void swap(int *a, int *b)
-{
-    int temp;
-    temp = *a;
-    *a = *b;
-    *b = temp;
-    trocas++;
+/*
+ * Insertion Sort — O(n²) no pior caso, O(n) se já ordenado
+ * Insere cada elemento na posição correta dentro da parte já ordenada.
+ * Eficiente para arrays pequenos ou quase ordenados.
+ */
+void insertionSort(int arr[], int n) {
+    for (int i = 1; i < n; i++) {
+        int key = arr[i];
+        int j = i - 1;
+        while (j >= 0 && arr[j] > key) {
+            arr[j + 1] = arr[j];
+            j--;
+        }
+        arr[j + 1] = key;
+    }
 }
 
-int partition(int arr[], int baixo, int alto)
-{
-    int pivo, i, j;
+/*
+ * Shell Sort — entre O(n log n) e O(n²) dependendo da sequência de gaps
+ * Melhoria do Insertion Sort: ordena elementos distantes antes dos adjacentes,
+ * reduzindo o número de movimentações necessárias.
+ */
+void shellSort(int arr[], int n) {
+    for (int gap = n / 2; gap > 0; gap /= 2) {
+        for (int i = gap; i < n; i++) {
+            int temp = arr[i];
+            int j;
+            for (j = i; j >= gap && arr[j - gap] > temp; j -= gap)
+                arr[j] = arr[j - gap];
+            arr[j] = temp;
+        }
+    }
+}
 
-    pivo = arr[alto];
-    i = baixo - 1;
+/* -------- Quick Sort -------- */
 
-    for(j = baixo; j < alto; j++)
-    {
-        comparacoes++;
-        if(arr[j] <= pivo)
-        {
+/*
+ * Particiona o array em torno de um pivô.
+ * Elementos menores ficam à esquerda, maiores à direita.
+ * Retorna o índice final do pivô.
+ */
+int partition(int arr[], int low, int high) {
+    int pivot = arr[high];
+    int i = low - 1;
+
+    for (int j = low; j < high; j++) {
+        if (arr[j] < pivot) {
             i++;
             swap(&arr[i], &arr[j]);
         }
     }
-
-    swap(&arr[i + 1], &arr[alto]);
+    swap(&arr[i + 1], &arr[high]);
     return i + 1;
 }
 
-void quickSort(int arr[], int baixo, int alto)
-{
-    int pi;
-
-    if(baixo < alto)
-    {
-        pi = partition(arr, baixo, alto);
-        quickSort(arr, baixo, pi - 1);
-        quickSort(arr, pi + 1, alto);
+/*
+ * Quick Sort — O(n log n) médio, O(n²) pior caso
+ * Divide o array recursivamente usando um pivô.
+ * Na prática, um dos mais rápidos para dados aleatórios.
+ */
+void quickSort(int arr[], int low, int high) {
+    if (low < high) {
+        int pi = partition(arr, low, high);
+        quickSort(arr, low, pi - 1);
+        quickSort(arr, pi + 1, high);
     }
 }
 
-/* ---- MERGE SORT ---- */
+/* -------- Merge Sort -------- */
 
-void merge(int arr[], int esq, int meio, int dir)
-{
-    int i, j, k;
-    int tam1, tam2;
-    int *L, *R;
+/*
+ * Intercala duas metades ordenadas de volta no array original.
+ */
+void merge(int arr[], int l, int m, int r) {
+    int n1 = m - l + 1;
+    int n2 = r - m;
 
-    tam1 = meio - esq + 1;
-    tam2 = dir - meio;
+    int *L = (int *)malloc(n1 * sizeof(int));
+    int *R = (int *)malloc(n2 * sizeof(int));
 
-    L = (int*) malloc(tam1 * sizeof(int));
-    R = (int*) malloc(tam2 * sizeof(int));
+    for (int i = 0; i < n1; i++) L[i] = arr[l + i];
+    for (int j = 0; j < n2; j++) R[j] = arr[m + 1 + j];
 
-    for(i = 0; i < tam1; i++)
-        L[i] = arr[esq + i];
+    int i = 0, j = 0, k = l;
+    while (i < n1 && j < n2)
+        arr[k++] = (L[i] <= R[j]) ? L[i++] : R[j++];
 
-    for(j = 0; j < tam2; j++)
-        R[j] = arr[meio + 1 + j];
-
-    i = 0;
-    j = 0;
-    k = esq;
-
-    while(i < tam1 && j < tam2)
-    {
-        comparacoes++;
-        if(L[i] <= R[j])
-        {
-            arr[k] = L[i];
-            i++;
-        }
-        else
-        {
-            arr[k] = R[j];
-            j++;
-        }
-        trocas++;
-        k++;
-    }
-
-    while(i < tam1)
-    {
-        arr[k] = L[i];
-        i++;
-        k++;
-    }
-
-    while(j < tam2)
-    {
-        arr[k] = R[j];
-        j++;
-        k++;
-    }
+    while (i < n1) arr[k++] = L[i++];
+    while (j < n2) arr[k++] = R[j++];
 
     free(L);
     free(R);
 }
 
-void mergeSort(int arr[], int esq, int dir)
-{
-    int meio;
-
-    if(esq < dir)
-    {
-        meio = (esq + dir) / 2;
-        mergeSort(arr, esq, meio);
-        mergeSort(arr, meio + 1, dir);
-        merge(arr, esq, meio, dir);
+/*
+ * Merge Sort — O(n log n) garantido
+ * Divide o array ao meio recursivamente e intercala as partes ordenadas.
+ * Estável e previsível, porém usa memória extra.
+ */
+void mergeSort(int arr[], int l, int r) {
+    if (l < r) {
+        int m = l + (r - l) / 2;
+        mergeSort(arr, l, m);
+        mergeSort(arr, m + 1, r);
+        merge(arr, l, m, r);
     }
 }
 
-/* ---- MAIN ---- */
+/* ============================================================
+   FUNCT PRINCIPAL
+   ============================================================ */
 
-int main()
-{
-    int arr1[] = {64, 25, 12, 22, 11};
-    int arr2[] = {64, 25, 12, 22, 11};
-    int arr3[] = {64, 25, 12, 22, 11};
-    int n = 5;
-    clock_t inicio, fim;
-    double tempo;
+int main() {
+    int n;
+    printf("Digite o tamanho do array: ");
+    scanf("%d", &n);
 
-    printf("Array original: ");
-    printArray(arr1, n);
-    printf("\n");
+    int *original = (int *)malloc(n * sizeof(int));
+    int *testArr  = (int *)malloc(n * sizeof(int));
 
-    comparacoes = 0;
-    trocas = 0;
-    inicio = clock();
-    insertionSort(arr1, n);
-    fim = clock();
-    tempo = (double)(fim - inicio) / CLOCKS_PER_SEC * 1000;
-    printf("InsertionSort:  ");
-    printArray(arr1, n);
-    printf("Tempo: %.4f ms  Comparacoes: %d  Trocas: %d\n\n", tempo, comparacoes, trocas);
+    /* Preenche o array com valores aleatórios entre 0 e 9999 */
+    srand(time(NULL));
+    for (int i = 0; i < n; i++)
+        original[i] = rand() % 10000;
 
-    comparacoes = 0;
-    trocas = 0;
-    inicio = clock();
-    quickSort(arr2, 0, n - 1);
-    fim = clock();
-    tempo = (double)(fim - inicio) / CLOCKS_PER_SEC * 1000;
-    printf("QuickSort:      ");
-    printArray(arr2, n);
-    printf("Tempo: %.4f ms  Comparacoes: %d  Trocas: %d\n\n", tempo, comparacoes, trocas);
+    int choice;
+    do {
+        printf("\n=== MENU DE ORDENACAO ===\n");
+        printf("1. Bubble Sort\n");
+        printf("2. Selection Sort\n");
+        printf("3. Insertion Sort\n");
+        printf("4. Quick Sort\n");
+        printf("5. Merge Sort\n");
+        printf("6. Shell Sort\n");
+        printf("0. Sair\n");
+        printf("Escolha: ");
+        scanf("%d", &choice);
 
-    comparacoes = 0;
-    trocas = 0;
-    inicio = clock();
-    mergeSort(arr3, 0, n - 1);
-    fim = clock();
-    tempo = (double)(fim - inicio) / CLOCKS_PER_SEC * 1000;
-    printf("MergeSort:      ");
-    printArray(arr3, n);
-    printf("Tempo: %.4f ms  Comparacoes: %d  Trocas: %d\n", tempo, comparacoes, trocas);
+        if (choice >= 1 && choice <= 6) {
+            copyArray(original, testArr, n);
 
+            /* Exibe o array apenas se for pequeno o suficiente */
+            if (n <= 20) {
+                printf("Original: ");
+                printArray(testArr, n);
+            }
+
+            /* Mede o tempo de execução do algoritmo escolhido */
+            clock_t start = clock();
+            switch (choice) {
+                case 1: bubbleSort(testArr, n);          break;
+                case 2: selectionSort(testArr, n);       break;
+                case 3: insertionSort(testArr, n);       break;
+                case 4: quickSort(testArr, 0, n - 1);   break;
+                case 5: mergeSort(testArr, 0, n - 1);   break;
+                case 6: shellSort(testArr, n);           break;
+            }
+            clock_t end = clock();
+
+            if (n <= 20) {
+                printf("Ordenado: ");
+                printArray(testArr, n);
+            }
+
+            double time_taken = (double)(end - start) / CLOCKS_PER_SEC;
+            printf("Tempo de execucao: %f segundos\n", time_taken);
+        }
+
+    } while (choice != 0);
+
+    free(original);
+    free(testArr);
     return 0;
 }
