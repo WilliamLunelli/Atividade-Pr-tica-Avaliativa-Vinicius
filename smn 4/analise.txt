@@ -1,0 +1,161 @@
+============================================================
+  AVALIAÇÃO INDIVIDUAL — ShellSort vs HeapSort
+  Respostas das Questões Teóricas
+============================================================
+
+
+QUESTÃO 1 -> O HeapSort possui complexidade O(n log n) garantida em todos
+os casos porque sua estrutura de funcionamento é determinística:
+
+1. A construção do max-heap (buildMaxHeap) percorre os n/2 nós
+   internos e cada ajuste (siftDown) desce no máximo log n níveis,
+   resultando em O(n log n).
+
+2. A fase de extração remove n elementos da raiz; cada remoção
+   chama siftDown, que custa O(log n), totalizando O(n log n).
+
+3. O comportamento NÃO depende da distribuição inicial dos dados,
+   pois a propriedade heap é mantida estruturalmente a cada operação.
+
+O ShellSort NÃO possui complexidade previsível porque:
+
+- Depende diretamente da sequência de gaps (incrementos) escolhida.
+- Com gaps de Shell (N/2, N/4, ..., 1): O(n²) no pior caso.
+- Com gaps de Hibbard: O(n^1.5) no pior caso.
+- Com gaps de Ciura: ~O(n^1.25) na prática, mas sem prova formal.
+- Não existe sequência de gaps com O(n log n) provado no pior caso.
+
+
+QUESTÃO 2 ->Vetor original: [30, 12, 45, 6, 18, 3]
+
+Árvore binária inicial (índices 0-based):
+          30
+         /  \
+       12    45
+      / \   /
+     6  18 3
+
+Passos para construir o Max-Heap (buildMaxHeap a partir
+do último nó interno, índice n/2 - 1 = 2):
+
+  Passo 1 — siftDown no índice 2 (valor 45):
+    Filho esquerdo: índice 5 (valor 3)
+    45 > 3 → sem troca.
+
+  Passo 2 — siftDown no índice 1 (valor 12):
+    Filho esquerdo: índice 3 (valor 6)
+    Filho direito:  índice 4 (valor 18)
+    Maior filho = 18 (índice 4)
+    12 < 18 → troca: [30, 18, 45, 6, 12, 3]
+
+  Passo 3 — siftDown no índice 0 (valor 30):
+    Filho esquerdo: índice 1 (valor 18)
+    Filho direito:  índice 2 (valor 45)
+    Maior filho = 45 (índice 2)
+    30 < 45 → troca: [45, 18, 30, 6, 12, 3]
+    Descer 30 para índice 2:
+      Filho esquerdo: índice 5 (valor 3)
+      30 > 3 → sem troca.
+
+a) Max-Heap final: [45, 18, 30, 6, 12, 3]
+
+          45
+         /  \
+       18    30
+      / \   /
+     6  12 3
+
+b) Após a 1ª extração da raiz (45):
+   - Troca raiz (45) com o último elemento (3):
+     Vetor: [3, 18, 30, 6, 12, 45]
+   - Reduz o heap para tamanho 5 (45 já está na posição final).
+   - siftDown na nova raiz (3), heap de tamanho 5:
+     Maior filho = 30 (índice 2) → troca: [30, 18, 3, 6, 12]
+     Descer 3 (índice 2): sem filhos dentro do heap → para.
+
+   Heap ativo após extração: [30, 18, 3, 6, 12]
+   Posição ordenada:         [..., 45]
+
+   Vetor completo: [30, 18, 3, 6, 12 | 45]
+
+
+QUESTÃO 3 -> Análise de cada afirmativa:
+
+I  — ShellSort é estável. → FALSO
+     ShellSort realiza trocas com gaps grandes, podendo inverter
+     a ordem relativa de elementos iguais. Portanto, não é estável.
+
+II — HeapSort utiliza estrutura baseada em árvore binária completa.
+     → VERDADEIRO
+     O heap é armazenado como array, mas corresponde a uma árvore
+     binária completa (todos os níveis preenchidos, exceto o último,
+     que é preenchido da esquerda para a direita).
+
+III— HeapSort depende da sequência de gaps. → FALSO
+     Quem depende de gaps é o ShellSort. O HeapSort utiliza
+     exclusivamente a propriedade heap e não tem conceito de gaps.
+
+IV — ShellSort é uma melhoria do Insertion Sort. → VERDADEIRO
+     Proposto por Donald Shell em 1959, o ShellSort é uma extensão
+     do Insertion Sort: ao usar gaps maiores no início, desloca
+     elementos distantes rapidamente, reduzindo o custo do
+     Insertion Sort final (quando gap = 1).
+
+GABARITO: A) Apenas II e IV
+
+
+QUESTÃO 4 ->Algoritmo indicado para processar milhões de registros: HEAPSORT
+
+Justificativa:
+
+1. Complexidade garantida: HeapSort tem O(n log n) em TODOS os
+   casos (melhor, médio e pior). Em ambiente de produção com
+   milhões de registros, não se pode aceitar degradação para O(n²),
+   como pode ocorrer com ShellSort em sequências de gaps ruins.
+
+2. Uso de memória O(1): HeapSort é in-place, não requer alocação
+   de memória adicional proporcional a n, o que é fundamental
+   quando se trabalha com grande volume de dados.
+
+3. Previsibilidade: o tempo de resposta do HeapSort é consistente
+   independente da ordem inicial dos dados, essencial para
+   sistemas com SLA (acordos de nível de serviço) definidos.
+
+4. Comparação com alternativas:
+   - ShellSort: mais rápido na prática para entradas aleatórias,
+     mas sem garantia formal de O(n log n) no pior caso.
+   - MergeSort: também O(n log n) garantido, porém usa O(n) de
+     memória extra — desvantagem para milhões de registros.
+   - QuickSort: O(n log n) médio, mas O(n²) no pior caso.
+
+Conclusão: HeapSort oferece a melhor combinação de complexidade
+garantida e eficiência de memória para sistemas críticos de alta escala.
+
+
+QUESTÃO 5 -> A estrutura Heap é utilizada em algoritmos de grafos como
+Fila de Prioridade, permitindo extrair eficientemente o
+elemento de menor (ou maior) prioridade em O(log n).
+
+Exemplo: Algoritmo de Dijkstra (menor caminho em grafos ponderados)
+
+  - Objetivo: encontrar o caminho de menor custo entre um vértice
+    de origem e todos os outros vértices do grafo.
+
+  - Uso do heap: mantém uma min-heap com pares (distância, vértice).
+
+  - A cada iteração Extrai o vértice com menor distância acumulada → O(log V) e
+    Para cada aresta vizinha, relaxa a distância e insere/
+    atualiza o vértice na heap → O(log V) por aresta.
+
+  - Complexidade total:
+      Com min-heap binário: O((V + E) log V)
+      Sem heap (busca linear): O(V²) — ineficiente para grafos esparsos.
+
+  - Benefício: o heap reduz drasticamente o tempo de busca pelo
+    próximo vértice a processar, de O(V) para O(log V).
+
+Outros algoritmos de grafos que utilizam heap:
+  - Algoritmo de Prim (Árvore Geradora Mínima): usa min-heap para
+    selecionar a aresta de menor peso a cada passo.
+  - Algoritmo A* (busca heurística): usa min-heap ordenada por
+    f(n) = g(n) + h(n) para expandir o nó mais promissor.
